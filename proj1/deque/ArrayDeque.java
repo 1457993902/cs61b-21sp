@@ -27,44 +27,48 @@ public class ArrayDeque<T>{
 
     /*resize the deque bigger**/
     public void increasesize(){
-        max=max*2;
-        T[] increased=(T[])new Object[max];
+        T[] increased=(T[])new Object[max*2];
         for(int i=0;i<size;i++){
             increased[i]=items[position(i)];
-            indexFirst=0;
-            items=increased;
         }
+        items=increased;
+        indexFirst=0;
+        max*=2;
     }
 
     /*resize the deque smaller**/
     public void decreasesize(){
-        max=max/2;
-        T[] decreased=(T[])new Object[max];
+        T[] decreased=(T[])new Object[max/2];
         for(int i=0;i<size;i++){
             decreased[i]=items[position(i)];
-            indexFirst=0;
-            items=decreased;
         }
+        indexFirst=0;
+        items=decreased;
+        max/=2;
     }
 
     /**add an element to the deque's begin*/
     public void addFirst(T item){
-        if(items[position(-1)]!=null){
-            increasesize();
-        }
         if(isEmpty()){
             items[position(0)]=item;
+            size+=1;
+            return;
+        }
+        if(size()==max){
+            increasesize();
         }
         items[position(-1)]=item;
+        indexFirst=(indexFirst+max-1)%max;
         size+=1;
     }
 
     /**add an element to the deque's end*/
     public void addLast(T item){
-        if(items[position(-1)]!=null){
+        if(size==max){
             increasesize();
         }
-        items[position(size-1)]=item;
+        items[position(size)]=item;
+        size+=1;
     }
 
     /**return whether the deque is empty or not */
