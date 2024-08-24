@@ -17,7 +17,7 @@ public class ArrayDeque<T>{
 
     /*circularly return the true position of an index**/
     public int position(int index){
-        return (size+index+indexFirst)%max;
+        return (max+index+indexFirst)%max;
     }
 
     /**return the size of the deque*/
