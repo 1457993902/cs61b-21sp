@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 /**Create a linkedlistdeque*/
 public class LinkedListDeque<T> implements Deque<T>,Iterable<T>{
-    public static class LinkNode<T>{
+    private static class LinkNode<T>{
         T item;
         LinkNode<T> next,pre;
 
@@ -23,8 +23,8 @@ public class LinkedListDeque<T> implements Deque<T>,Iterable<T>{
     }
 
 
-    LinkNode<T> sentinel;
-    int size;
+    private LinkNode<T> sentinel;
+    private int size;
 
 
     public LinkedListDeque(){
@@ -66,6 +66,7 @@ public class LinkedListDeque<T> implements Deque<T>,Iterable<T>{
         }
         LinkNode<T> temp=sentinel.next;
         sentinel.next=sentinel.next.next;
+        sentinel.next.pre=sentinel;
         size--;
         return temp.item;
     }
@@ -78,6 +79,7 @@ public class LinkedListDeque<T> implements Deque<T>,Iterable<T>{
         }
         LinkNode<T> temp=sentinel.pre;
         sentinel.pre=sentinel.pre.pre;
+        sentinel.pre.next=sentinel;
         size--;
         return temp.item;
     }
@@ -115,8 +117,13 @@ public class LinkedListDeque<T> implements Deque<T>,Iterable<T>{
     }
 
     public boolean equals(Object o){
-        if(o instanceof LinkedListDeque){
-            LinkedListDeque<?> ob=(LinkedListDeque<?>) o;
+        if(o instanceof Deque){
+            Deque ob;
+            if(o instanceof LinkedListDeque<?>){
+                ob=(LinkedListDeque<?>) o;
+            }else{
+                ob=(ArrayDeque<?>) o;
+            }
             for(int i=0;i<Math.max(size(),ob.size());i++) {
                 if (ob.get(i) != get(i)) {
                     return false;

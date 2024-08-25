@@ -5,10 +5,10 @@ import java.util.Iterator;
 /**Create an Arraylistdeque*/
 public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
 
-    T[] items;
-    int size;
-    int indexFirst;
-    int max;
+    private T[] items;
+    private int size;
+    private int indexFirst;
+    private int max;
 
 
     public ArrayDeque(){
@@ -19,7 +19,7 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
     }
 
     /*circularly return the true position of an index**/
-    public int position(int index){
+    private int position(int index){
         return (max+index+indexFirst)%max;
     }
 
@@ -31,7 +31,7 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
     }
 
     /*resize the deque bigger**/
-    public void increasesize(){
+    private void increasesize(){
         T[] increased=(T[])new Object[max*2];
         for(int i=0;i<size;i++){
             increased[i]=items[position(i)];
@@ -42,7 +42,7 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
     }
 
     /*resize the deque smaller**/
-    public void decreasesize(){
+    private void decreasesize(){
         T[] decreased=(T[])new Object[max/2];
         for(int i=0;i<size;i++){
             decreased[i]=items[position(i)];
@@ -167,8 +167,13 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
 
     @Override
     public boolean equals(Object o){
-        if(o instanceof ArrayDeque){
-            ArrayDeque<?> ob=(ArrayDeque<?>) o;
+        if(o instanceof Deque){
+            Deque ob;
+            if(o instanceof LinkedListDeque<?>){
+                ob=(LinkedListDeque<?>) o;
+            }else{
+                ob=(ArrayDeque<?>) o;
+            }
             for(int i=0;i<Math.max(size(),ob.size());i++) {
                 if (ob.get(i) != get(i)) {
                     return false;
