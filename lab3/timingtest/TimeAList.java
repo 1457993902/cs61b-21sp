@@ -22,6 +22,19 @@ public class TimeAList {
     }
 
     public static void timeAListConstruction() {
-        // TODO: YOUR CODE HERE
+        AList<Integer> cout=new AList<>();
+        AList<Double> Fulltime=new AList<>();
+        for(int i=0,N=1000;i<8;i++){
+            AList<Integer> item=new AList<>();
+            Stopwatch sw=new Stopwatch();
+            for(int n=0;n<N;n++){
+                item.addLast(n);
+            }
+            double time=sw.elapsedTime();
+            cout.addLast(N);
+            Fulltime.addLast(time);
+            N*=2;
+        }
+        printTimingTable(cout,Fulltime,cout);
     }
 }
