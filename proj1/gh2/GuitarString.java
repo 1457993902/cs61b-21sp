@@ -3,7 +3,7 @@ package gh2;
 // TODO: uncomment the following import once you're ready to start this portion
 import deque.Deque;
 import deque.LinkedListDeque;
-import edu.princeton.cs.algs4.StdAudio;
+import edu.princeton.cs.introcs.StdAudio;
 // TODO: maybe more imports
 
 //Note: This file will not compile until you complete the Deque implementations

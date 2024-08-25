@@ -22,7 +22,7 @@ public class TTFAF {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         GuitarPlayer player = new GuitarPlayer(new java.io.File("path/to/music.mid"));
         player.play();
     }

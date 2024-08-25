@@ -32,11 +32,13 @@ public class LinkedListDeque<T> implements Deque<T>{
     }
 
     /**return the size of the deque*/
+    @Override
     public int size(){
         return size;
     }
 
     /**add an element to the deque's begin*/
+    @Override
     public void addFirst(T item){
         sentinel.next.pre=new LinkNode<>(item,sentinel,sentinel.next);
         sentinel.next=sentinel.next.pre;
@@ -45,6 +47,7 @@ public class LinkedListDeque<T> implements Deque<T>{
 
 
     /**add an element to the deque's end*/
+    @Override
     public void addLast(T item){
         sentinel.pre.next=new LinkNode<>(item,sentinel.pre,sentinel);
         sentinel.pre=sentinel.pre.next;
@@ -53,6 +56,7 @@ public class LinkedListDeque<T> implements Deque<T>{
 
 
     /**remove the first element in deque*/
+    @Override
     public T removeFirst(){
         if(isEmpty()){
             return null;
@@ -64,6 +68,7 @@ public class LinkedListDeque<T> implements Deque<T>{
     }
 
     /**remove the last element in deque*/
+    @Override
     public T removeLast(){
         if(isEmpty()){
             return null;
@@ -77,6 +82,7 @@ public class LinkedListDeque<T> implements Deque<T>{
     /**Prints the items in the deque from first to last,
      separated by a space. Once all the items have been printed,
      print out a new line.*/
+    @Override
     public void printDeque(){
         for(LinkNode<T> curr=sentinel.next;curr!=sentinel&&curr!=null;curr=curr.next){
             System.out.print(curr.item+" ");
@@ -87,6 +93,7 @@ public class LinkedListDeque<T> implements Deque<T>{
     /**Gets the item at the given index,
     where 0 is the front, 1 is the next item, and so forth.
      If no such item exists, returns null.*/
+    @Override
     public T get(int index){
         if (index>size-1){
             return null;
