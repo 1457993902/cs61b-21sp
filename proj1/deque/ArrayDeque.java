@@ -1,6 +1,9 @@
 package deque;
+
+import java.util.Iterator;
+
 /**Create an Arraylistdeque*/
-public class ArrayDeque<T> implements Deque<T>{
+public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
 
     T[] items;
     int size;
@@ -132,4 +135,50 @@ public class ArrayDeque<T> implements Deque<T>{
         }
         return items[position(index)];
     }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new ArrayIterator() ;
+    }
+
+    private class ArrayIterator implements Iterator<T>{
+
+        private int position;
+
+        public ArrayIterator(){
+            position=0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if(position==size()){
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public T next() {
+            position+=1;
+            return get(position-1);
+        }
+
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof ArrayDeque){
+            ArrayDeque<?> ob=(ArrayDeque<?>) o;
+            for(int i=0;i<Math.max(size(),ob.size());i++) {
+                if (ob.get(i) != get(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
 }
