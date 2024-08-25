@@ -1,6 +1,6 @@
 package deque;
 /**Create a linkedlistdeque*/
-public class LinkedListDeque<T>{
+public class LinkedListDeque<T> implements Deque<T>{
     public static class LinkNode<T>{
         T item;
         LinkNode<T> next,pre;
@@ -43,6 +43,7 @@ public class LinkedListDeque<T>{
         size+=1;
     }
 
+
     /**add an element to the deque's end*/
     public void addLast(T item){
         sentinel.pre.next=new LinkNode<>(item,sentinel.pre,sentinel);
@@ -50,10 +51,6 @@ public class LinkedListDeque<T>{
         size+=1;
     }
 
-    /**return whether the deque is empty or not */
-    public boolean isEmpty(){
-        return size==0;
-    }
 
     /**remove the first element in deque*/
     public T removeFirst(){

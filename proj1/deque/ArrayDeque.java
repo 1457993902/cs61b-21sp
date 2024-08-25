@@ -1,6 +1,6 @@
 package deque;
 /**Create an Arraylistdeque*/
-public class ArrayDeque<T>{
+public class ArrayDeque<T> implements Deque<T>{
 
     T[] items;
     int size;
@@ -71,10 +71,6 @@ public class ArrayDeque<T>{
         size+=1;
     }
 
-    /**return whether the deque is empty or not */
-    public boolean isEmpty(){
-        return size==0;
-    }
 
     /**remove the first element in deque*/
     public T removeFirst(){
