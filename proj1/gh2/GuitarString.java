@@ -42,11 +42,9 @@ public class GuitarString {
      */
     public void tic() {
         double first,newDouble;
-        while(true) {
             first = buffer.removeFirst();
             newDouble = 0.5 * (first + buffer.get(0)) * DECAY;
             buffer.addLast(newDouble);
-        }
     }
 
     /* Return the double at the front of the buffer. */
