@@ -19,10 +19,6 @@ public class GuitarString {
 
     /* Create a guitar string of the given frequency.  */
     public GuitarString(double frequency) {
-        // TODO: Create a buffer with capacity = SR / frequency. You'll need to
-        //       cast the result of this division operation into an int. For
-        //       better accuracy, use the Math.round() function before casting.
-        //       Your should initially fill your buffer array with zeros.
         buffer=new LinkedListDeque<>();
         for(int i=0;i<Math.round(SR/frequency);i++){
             buffer.addLast((double)0);
@@ -41,6 +37,13 @@ public class GuitarString {
             buffer.removeLast();
             buffer.addFirst(Math.random() - 0.5);
         }
+    }
+
+    /* Advance the simulation one time step by performing one iteration of
+     * the Karplus-Strong algorithm.
+     */
+    public void tic() {
+        //       **Do not call StdAudio.play().**
         double first,newDouble;
         while(true) {
             first = buffer.removeFirst();
@@ -49,15 +52,8 @@ public class GuitarString {
         }
     }
 
-    /* Advance the simulation one time step by performing one iteration of
-     * the Karplus-Strong algorithm.
-     */
-    public void tic() {
-        //       **Do not call StdAudio.play().**
-    }
-
     /* Return the double at the front of the buffer. */
     public double sample() {
-        return 0;
+        return buffer.get(0);
     }
 }

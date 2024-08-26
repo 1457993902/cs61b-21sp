@@ -107,7 +107,7 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
         T temp=items[position(size-1)];
         items[position(size-1)]=null;
         size-=1;
-        if(1.0*size/max<0.25&&size>16){
+        while(1.0*size/max<0.25&&size>16){
             decreasesize();
         }
         return temp;
@@ -175,7 +175,7 @@ public class ArrayDeque<T> implements Deque<T>,Iterable<T>{
                 ob=(ArrayDeque<?>) o;
             }
             for(int i=0;i<Math.max(size(),ob.size());i++) {
-                if (ob.get(i) != get(i)) {
+                if (!ob.get(i).equals(get(i))) {
                     return false;
                 }
             }
