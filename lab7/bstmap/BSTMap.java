@@ -16,7 +16,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
     }
 
     private BSTNode root;
-    int size;
+    private int size;
 
     public BSTMap(){
         root=null;
@@ -24,7 +24,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
     }
 
     @Override
-    public Iterator iterator() {
+    public Iterator<K> iterator() {
         throw new UnsupportedOperationException();
     }
 
