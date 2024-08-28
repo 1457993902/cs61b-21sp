@@ -48,11 +48,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     @Override
     public void put(K key, V value) {
         Collection<Node> bucket = buckets[hash(key)];
-        for(Node n: bucket) {
-            if(n.key.equals(key)){
-                bucket.remove(n);
-            }
-        }
+        remove(key);
         bucket.add(createNode(key, value));
         if(!keys.contains(key)) {
             size += 1;
@@ -70,12 +66,38 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException();
+        Node temp = null;
+        Collection<Node> bucket = buckets[hash(key)];
+        if(bucket != null) {
+            for(Node n: bucket) {
+                if(n.key.equals(key)){
+                    temp = n;
+                    bucket.remove(n);
+                    keys.remove(key);
+                    size -= 1;
+                    return temp.value;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException();
+        Node temp = null;
+        Collection<Node> bucket = buckets[hash(key)];
+        if(bucket != null){
+            for(Node n: bucket) {
+                if(n.key.equals(key)&&n.value.equals(value)){
+                    temp = n;
+                    bucket.remove(n);
+                    keys.remove(key);
+                    size -= 1;
+                    return temp.value;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -169,7 +191,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * OWN BUCKET DATA STRUCTURES WITH THE NEW OPERATOR!
      */
     protected Collection<Node> createBucket() {
-        return new LinkedList<>();
+        return new ArrayList<>();
     }
 
     /**
