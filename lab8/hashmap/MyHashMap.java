@@ -10,7 +10,7 @@ import java.util.*;
  *  @author YOUR NAME HERE
  */
 public class MyHashMap<K, V> implements Map61B<K, V> {
-    int hash(K key) {
+    private int hash(K key) {
         int hash = key.hashCode();
         return Math.floorMod(hash, buckets.length);
     }
