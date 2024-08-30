@@ -13,11 +13,47 @@ public class Main {
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
-                // TODO: handle the `init` command
+                Repository.init();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                Repository.add(args[1]);
                 break;
+            case "commit":
+                Repository.commit(args[1]);
+                break;
+            case "rm":
+                Repository.remove(args[1]);
+                break;
+            case "log":
+                Repository.log();
+                break;
+            case "global-log":
+                Repository.global_log();
+                break;
+            case "find":
+                Repository.find(args[1]);
+                break;
+            case "status":
+                Repository.status();
+                break;
+            case "checkout":
+                switch(args[1]) {
+
+                }
+                break;
+            case "branck":
+                Repository.createBranch(args[1]);
+                break;
+            case "rm-branch":
+                Repository.removeBranch(args[1]);
+                break;
+            case "reset":
+                Repository.reset(args[1]);
+                break;
+            case "merge":
+                Repository.merge(args[1]);
+                break;
+
             // TODO: FILL THE REST IN
         }
     }
