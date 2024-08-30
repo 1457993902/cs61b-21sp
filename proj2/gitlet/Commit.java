@@ -6,8 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
-import java.util.TreeMap;
+import java.util.HashSet;
 
+import static gitlet.CommitPointer.readHead;
 import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
@@ -29,8 +30,8 @@ public class Commit implements Serializable {
     /** The message of this Commit. */
     private String message;
     private Date timestamp;
-    private TreeMap<String, Myfile> files;
-    private String parent;
+    private HashSet<Myfile> files;
+    private File parent;
 
     Commit() {
         COMMIT_DIR.mkdir();
@@ -42,30 +43,44 @@ public class Commit implements Serializable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        files = new TreeMap<>();
-
-
-        CommitPointer head = new CommitPointer(HEAD, this);
-        CommitPointer master = new CommitPointer(MARSTER, this);
+        timestamp = new Date(0);
+        files = new HashSet<>();
         saveCommit();
     }
 
-    Commit(String message) {
-        parent = readObject(HEAD, CommitPointer.class).currPoint();
+    public void update(Status status, String message) {
+        parent = readHead().currPoint();
+        for (Myfile add: status.staging) {
+            for (Myfile file: files) {
+                if (add.sameName(file)) {
+                    files.remove(file);
+                    files.add(add);
+                }
+            }
+        }
+        for (Myfile remove: status.removal) {
+            for (Myfile file: files) {
+                if (remove.sameName(file)) {
+                    files.remove(file);
+                }
+            }
+        }
+        timestamp = new Date();
         this.message = message;
-        files = new TreeMap<>();
-
-        CommitPointer head = new CommitPointer(HEAD, this);
         saveCommit();
+    }
+
+    public static Commit currCommit() {
+        return readObject(readHead().currPoint(), Commit.class);
+    }
+
+    public HashSet<Myfile> files() {
+        return files;
     }
 
     private void saveCommit() {
         File commit = join(COMMIT_DIR, sha1(this));
         writeObject(commit, this);
-    }
-
-    public void update(Status status) {
-
     }
     /* TODO: fill in the rest of this class. */
 }

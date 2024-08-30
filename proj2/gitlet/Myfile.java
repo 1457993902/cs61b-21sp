@@ -2,42 +2,65 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashSet;
 
-import static gitlet.Repository.BLOBS_DIR;
-import static gitlet.Repository.CWD;
+import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
-public class Myfile {
+public class Myfile implements Serializable {
 
-    String filename;
-    File FILENAME_DIR;
-    HashSet<String> version;
-    String latestVersion;;
+    private File filename;
+    private File FILENAME_BLOB;
+    private HashSet<File> versions;
+    private File latestVersion;
+
 
     Myfile(String filename) {
-        if (!join(CWD, filename).exists()) {
+        this.filename = join(CWD, new File(filename).getPath());
+        if (!this.filename.exists()) {
             throw new GitletException("File does not exist.");
         }
-        FILENAME_DIR = join(BLOBS_DIR, filename);
-        FILENAME_DIR.mkdir();
-        this.filename = filename;
+        FILENAME_BLOB = join(BLOBS_DIR, filename);
+        FILENAME_BLOB.mkdir();
+        versions = new HashSet<>();
+        latestVersion = null;
     }
 
-    public void stage() {
-        String contents = readContentsAsString(join(CWD, filename));
+    /**
+     * called to switch Myfile to staged status, if there's no directory or file in blobs,
+     * then create
+     */
+    public void stage(Status status) {
+        String contents = readContentsAsString(filename);
         String hashContents = sha1(contents);
-        if (latestVersion == hashContents) {
+        File newVersion = join(FILENAME_BLOB, hashContents);
+        if (newVersion.equals(latestVersion)) {
             return;
         }
-        latestVersion = hashContents;
-        if (!version.contains(latestVersion)) {
-        version.add(latestVersion);
+        latestVersion = newVersion;
+        if (!versions.contains(latestVersion)) {
+            versions.add(latestVersion);
             try {
-                join(FILENAME_DIR, latestVersion).createNewFile();
+                newVersion.createNewFile();
+                writeObject(newVersion, Myfile.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
+        status.staged(this);
+    }
+
+    public void remove(Status status) {
+        status.remove(this);
+    }
+
+
+    public File getname() {
+        return filename;
+    }
+
+    public Boolean sameName(Myfile otherfile) {
+        return filename == otherfile.getname();
     }
 }

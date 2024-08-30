@@ -43,6 +43,8 @@ class Utils {
                     md.update((byte[]) val);
                 } else if (val instanceof String) {
                     md.update(((String) val).getBytes(StandardCharsets.UTF_8));
+                } else if (vals instanceof Serializable) {
+                    sha1(serialize(vals));
                 } else {
                     throw new IllegalArgumentException("improper type to sha1");
                 }

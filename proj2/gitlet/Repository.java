@@ -1,6 +1,12 @@
 package gitlet;
 
 import java.io.File;
+import java.io.IOException;
+
+import static gitlet.Commit.currCommit;
+import static gitlet.CommitPointer.readHead;
+import static gitlet.CommitPointer.readMaster;
+import static gitlet.Status.readStatus;
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -27,8 +33,8 @@ public class Repository {
     public static final File HEAD = join(GITLET_DIR, "head");
     public static final File MARSTER = join(GITLET_DIR, "master");
     public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
-    public static final File STAGE_DIR = join(GITLET_DIR, "stage");
     public static final File COMMIT_DIR = join(GITLET_DIR, "commits");
+    public static final File STATUS = join(GITLET_DIR, "status");
 
     public static void init() {
         if(GITLET_DIR.exists()){
@@ -36,18 +42,29 @@ public class Repository {
         }
         GITLET_DIR.mkdir();
         BLOBS_DIR.mkdir();
-        STAGE_DIR.mkdir();
-        Commit InitCommit = new Commit();
+        try {
+            STATUS.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        new Status();
+        Commit commit = new Commit();
+        new CommitPointer(HEAD, commit);
+        new CommitPointer(MARSTER, commit);
     }
 
     /**
-     *
+     *receive a String, add
      * @param filename
      */
     public static void add(String filename) {
+        Status status = readStatus();
         Myfile addedFile = new Myfile(filename);
-        addedFile.stage();
-
+        if (status.removal != null && status.removal.contains(addedFile)) {
+            status.removal.remove(addedFile);
+        }
+        addedFile.stage(status);
+        status.saveStatus();
     }
 
     /**
@@ -55,8 +72,12 @@ public class Repository {
      * @param message
      */
     public static void commit(String message) {
-        Commit newcommit = readObject(join(COMMIT_DIR, readObject(HEAD, CommitPointer.class).currPoint()), Commit.class);
-        
+        Commit newcommit =currCommit();
+        Status status = readStatus();
+        newcommit.update(status, message);
+        readHead().MovePointer(newcommit);
+        readMaster().MovePointer(newcommit);
+        writeObject(STATUS, new Status());
     }
 
     /**
@@ -64,7 +85,17 @@ public class Repository {
      * @param filename
      */
     public static void remove(String filename) {
+        Myfile removedFile = new Myfile(filename);
+        Status status = readStatus();
+        if (status.staging.contains(removedFile)) {
+            status.staging.remove(removedFile);
+        }
+        if (currCommit().files().contains(removedFile)) {
+            removedFile.remove(status);
+            restrictedDelete(filename);
+        }
 
+        status.saveStatus();
     }
 
     public static void log() {
