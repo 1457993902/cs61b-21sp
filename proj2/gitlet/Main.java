@@ -19,6 +19,9 @@ public class Main {
                 Repository.add(args[1]);
                 break;
             case "commit":
+                if (args.length < 3) {
+                    throw new GitletException("Please enter a commit message.");
+                }
                 Repository.commit(args[1]);
                 break;
             case "rm":

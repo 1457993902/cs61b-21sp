@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static gitlet.Commit.currCommit;
-import static gitlet.CommitPointer.readHead;
-import static gitlet.CommitPointer.readMaster;
+import static gitlet.CommitPointer.*;
 import static gitlet.Status.readStatus;
 import static gitlet.Utils.*;
 
@@ -30,10 +29,12 @@ public class Repository {
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
+
     public static final File HEAD = join(GITLET_DIR, "head");
     public static final File MARSTER = join(GITLET_DIR, "master");
     public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
     public static final File COMMIT_DIR = join(GITLET_DIR, "commits");
+    public static final File STAGE_DIR = join(GITLET_DIR, "stage");
     public static final File STATUS = join(GITLET_DIR, "status");
 
     public static void init() {
@@ -42,13 +43,9 @@ public class Repository {
         }
         GITLET_DIR.mkdir();
         BLOBS_DIR.mkdir();
-        try {
-            STATUS.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        new Status();
+        STAGE_DIR.mkdir();
         Commit commit = new Commit();
+        new Status();
         new CommitPointer(HEAD, commit);
         new CommitPointer(MARSTER, commit);
     }
@@ -59,12 +56,8 @@ public class Repository {
      */
     public static void add(String filename) {
         Status status = readStatus();
-        Myfile addedFile = new Myfile(filename);
-        if (status.removal != null && status.removal.contains(addedFile)) {
-            status.removal.remove(addedFile);
-        }
-        addedFile.stage(status);
-        status.saveStatus();
+        File addedFile = new File(filename);
+        status.stage(addedFile);
     }
 
     /**
@@ -74,10 +67,13 @@ public class Repository {
     public static void commit(String message) {
         Commit newcommit =currCommit();
         Status status = readStatus();
+        if (status.removal() == null && status.staging() == null) {
+            throw new GitletException("No changes added to the commit.");
+        }
         newcommit.update(status, message);
-        readHead().MovePointer(newcommit);
-        readMaster().MovePointer(newcommit);
-        writeObject(STATUS, new Status());
+        saveMaster(newcommit);
+        saveHead(newcommit);
+        status.clear();
     }
 
     /**
@@ -85,20 +81,13 @@ public class Repository {
      * @param filename
      */
     public static void remove(String filename) {
-        Myfile removedFile = new Myfile(filename);
+        File removedFile = new File(filename);
         Status status = readStatus();
-        if (status.staging.contains(removedFile)) {
-            status.staging.remove(removedFile);
-        }
-        if (currCommit().files().contains(removedFile)) {
-            removedFile.remove(status);
-            restrictedDelete(filename);
-        }
-
-        status.saveStatus();
+        status.remove(removedFile);
     }
 
     public static void log() {
+
     }
     
     public static void global_log() {

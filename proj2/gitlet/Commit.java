@@ -6,9 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.HashMap;
 import java.util.HashSet;
 
-import static gitlet.CommitPointer.readHead;
+import static gitlet.CommitPointer.*;
 import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
@@ -30,7 +31,7 @@ public class Commit implements Serializable {
     /** The message of this Commit. */
     private String message;
     private Date timestamp;
-    private HashSet<Myfile> files;
+    private HashMap<File, Myfile> files;
     private File parent;
 
     Commit() {
@@ -44,26 +45,32 @@ public class Commit implements Serializable {
             throw new RuntimeException(e);
         }
         timestamp = new Date(0);
-        files = new HashSet<>();
+        files = new HashMap<>();
         saveCommit();
     }
 
     public void update(Status status, String message) {
         parent = readHead().currPoint();
-        for (Myfile add: status.staging) {
-            for (Myfile file: files) {
-                if (add.sameName(file)) {
-                    files.remove(file);
-                    files.add(add);
+        for (File add: status.staging()) {
+            String newcontents = readContentsAsString(join(STAGE_DIR, add.getPath()));
+            File newversion = join(BLOBS_DIR, sha1(newcontents));
+            if (!newversion.exists()) {
+                try {
+                    newversion.createNewFile();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
+                writeContents(newversion, newcontents);
+            }
+            if (!files.containsKey(add)) {
+                files.put(add, new Myfile(add, newversion));
+            } else {
+                Myfile pre = files.get(add);
+                pre.update(newversion);
             }
         }
-        for (Myfile remove: status.removal) {
-            for (Myfile file: files) {
-                if (remove.sameName(file)) {
-                    files.remove(file);
-                }
-            }
+        for (File remove: status.removal()) {
+            files.remove(remove);
         }
         timestamp = new Date();
         this.message = message;
@@ -74,7 +81,7 @@ public class Commit implements Serializable {
         return readObject(readHead().currPoint(), Commit.class);
     }
 
-    public HashSet<Myfile> files() {
+    public HashMap<File, Myfile> files() {
         return files;
     }
 

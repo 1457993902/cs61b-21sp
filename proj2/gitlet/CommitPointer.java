@@ -26,7 +26,6 @@ public class CommitPointer implements Serializable {
      */
     public void MovePointer(Commit commit) {
         this.commit = join(COMMIT_DIR, sha1(commit));
-        writeObject(masterOrHead, this);
         savePointer();
     }
 
@@ -44,5 +43,13 @@ public class CommitPointer implements Serializable {
 
     public void savePointer() {
         writeObject(masterOrHead, this);
+    }
+
+    public static void saveHead(Commit commit) {
+        readHead().MovePointer(commit);
+    }
+
+    public static void saveMaster(Commit commit) {
+        readMaster().MovePointer(commit);
     }
 }
