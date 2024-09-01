@@ -68,7 +68,8 @@ public class Status implements Serializable {
             restrictedDelete(filename);
             saveStatus();
         } else {
-            throw new GitletException("No reason to remove the file");
+            System.out.println("No reason to remove the file");
+            System.exit(0);
         }
     }
 
@@ -108,7 +109,8 @@ public class Status implements Serializable {
     public void createBranch(String branchname) {
         File branchName = join(GITLET_DIR, branchname);
         if (Branches.contains(branchName)) {
-            throw new GitletException("A branch with that name already exists.");
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
         }
         try {
             branchName.createNewFile();
@@ -124,9 +126,11 @@ public class Status implements Serializable {
     public void removeBranch(String branchname) {
         File branchName = join(GITLET_DIR, branchname);
         if (!branchName.exists()) {
-            throw new GitletException("A branch with that name does not exist.");
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
         } else if (branchName.equals(branch)) {
-            throw new GitletException("Cannot remove the current branch.");
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
         }
         branchName.delete();
         Branches.remove(branchName);
@@ -135,7 +139,8 @@ public class Status implements Serializable {
 
     public void checkout(File commitName) {
         if (!untrackedFile().isEmpty()) {
-            throw new GitletException("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.exit(0);
         }
         Commit commit = readObject(join(COMMIT_DIR, commitName.getName()), Commit.class);
         for (String all: plainFilenamesIn(CWD)) {
@@ -159,9 +164,11 @@ public class Status implements Serializable {
 
     public void switchBranch(File branchName) {
         if (branchName.equals(branch)) {
-            throw new GitletException("No need to checkout the current branch.");
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
         } else if (!Branches.contains(branchName)) {
-            throw new GitletException("No such branch exists.");
+            System.out.println("No such branch exists.");
+            System.exit(0);
         }
         checkout(readBranch(branchName).currPoint());
         writeObject(HEAD, readBranch(branchName));

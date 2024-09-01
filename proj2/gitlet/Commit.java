@@ -37,7 +37,7 @@ public class Commit implements Serializable {
     Commit() {
         COMMIT_DIR.mkdir();
         this.message = "initial commit";
-        parent = null;
+        parent = new ArrayList<>();
         try {
             MARSTER.createNewFile();
             HEAD.createNewFile();
@@ -119,6 +119,9 @@ public class Commit implements Serializable {
     }
 
     public File getParent(int index) {
+        if (parent.isEmpty()) {
+            return null;
+        }
         return parent.get(index);
     }
 

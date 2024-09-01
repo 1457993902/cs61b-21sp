@@ -40,7 +40,8 @@ public class Repository {
 
     public static void init() {
         if(GITLET_DIR.exists()){
-            throw new GitletException("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.exit(0);
         }
         GITLET_DIR.mkdir();
         BLOBS_DIR.mkdir();
@@ -69,7 +70,8 @@ public class Repository {
         Commit newcommit =currCommit();
         Status status = readStatus();
         if (status.removal() == null && status.staging() == null) {
-            throw new GitletException("No changes added to the commit.");
+            System.out.println("No changes added to the commit.");
+            System.exit(0);
         }
         newcommit.update(status, message);
         saveBranch(status.getBranch(), newcommit);
@@ -115,7 +117,8 @@ public class Repository {
             }
         }
         if (!exist) {
-            throw new GitletException("Found no commit with that message.");
+            System.out.println("Found no commit with that message.");
+            System.exit(0);
         }
     }
 
@@ -197,7 +200,8 @@ public class Repository {
 
     private static void checkout(File commitName, File fileName) {
         if (!plainFilenamesIn(COMMIT_DIR).contains(commitName.getName())) {
-            throw new GitletException("No commit with that id exists.");
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
         }
         Commit commit = readObject(commitName, Commit.class);
         for (File file: commit.files().keySet()) {
@@ -207,7 +211,8 @@ public class Repository {
                 return;
             }
         }
-        throw new GitletException("File does not exist in that commit.");
+        System.out.println("File does not exist in that commit.");
+        System.exit(0);
     }
 
     public static void checkout(String commitname, String filename) {
@@ -241,7 +246,8 @@ public class Repository {
         Status status = readStatus();
         File commitName = new File(commitname);
         if (!plainFilenamesIn(COMMIT_DIR).contains(commitName.getName())) {
-            throw new GitletException("No commit with that id exists.");
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
         }
         status.checkout(commitName);
     }
@@ -249,18 +255,22 @@ public class Repository {
     public static void merge(String branchname) {
         Status status = readStatus();
         if (!status.removal().isEmpty() || !status.staging().isEmpty()) {
-            throw new GitletException("You have uncommitted changes.");
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
         }
         File branchName = join(GITLET_DIR, branchname);
         if (!status.getBranches().contains(branchName)) {
-            throw new GitletException("A branch with that name does not exist.");
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
         }
         Commit commit = currCommit();
         if(commit.getBranch().equals(branchName)) {
-            throw new GitletException("Cannot merge a branch with itself.");
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
         }
         if (!untrackedFile().isEmpty()) {
-            throw new GitletException("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.exit(0);
         }
         Commit otherCommit = readObject(readBranch(branchName).currPoint(), Commit.class);
         Commit spilt1 = otherCommit, spilt2 = commit;

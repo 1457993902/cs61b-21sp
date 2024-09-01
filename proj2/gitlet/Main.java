@@ -20,7 +20,8 @@ public class Main {
                 break;
             case "commit":
                 if (args.length < 2) {
-                    throw new GitletException("Please enter a commit message.");
+                    System.out.println("Please enter a commit message.");
+                    System.exit(0);
                 }
                 Repository.commit(args[1]);
                 break;
@@ -45,7 +46,7 @@ public class Main {
                         Repository.checkoutLatest(args[2]);
                         break;
                     case 4:
-                        Repository.checkout(args[2],args[3]);
+                        Repository.checkout(args[1],args[3]);
                         break;
                     case 2:
                         Repository.checkoutBranch(args[1]);
