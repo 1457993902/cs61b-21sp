@@ -19,7 +19,7 @@ public class Main {
                 Repository.add(args[1]);
                 break;
             case "commit":
-                if (args.length < 3) {
+                if (args.length < 2) {
                     throw new GitletException("Please enter a commit message.");
                 }
                 Repository.commit(args[1]);
@@ -40,11 +40,19 @@ public class Main {
                 Repository.status();
                 break;
             case "checkout":
-                switch(args[1]) {
-
+                switch(args.length) {
+                    case 3:
+                        Repository.checkoutLatest(args[2]);
+                        break;
+                    case 4:
+                        Repository.checkout(args[2],args[3]);
+                        break;
+                    case 2:
+                        Repository.checkoutBranch(args[1]);
+                        break;
                 }
                 break;
-            case "branck":
+            case "branch":
                 Repository.createBranch(args[1]);
                 break;
             case "rm-branch":

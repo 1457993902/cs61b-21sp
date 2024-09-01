@@ -44,7 +44,7 @@ public class Utils {
                 } else if (val instanceof String) {
                     md.update(((String) val).getBytes(StandardCharsets.UTF_8));
                 } else if (vals instanceof Serializable) {
-                    sha1(serialize(vals));
+                    return sha1(serialize(vals));
                 } else {
                     throw new IllegalArgumentException("improper type to sha1");
                 }
@@ -72,7 +72,7 @@ public class Utils {
      *  and throws IllegalArgumentException unless the directory designated by
      *  FILE also contains a directory named .gitlet. */
     static boolean restrictedDelete(File file) {
-        if (!(new File(file.getParentFile(), ".gitlet")).isDirectory()) {
+        if (!(new File(file.getParentFile(), ".gitlet")).isDirectory() && !(new File(file.getParentFile(), "stage")).isDirectory()) {
             throw new IllegalArgumentException("not .gitlet working directory");
         }
         if (!file.isDirectory()) {

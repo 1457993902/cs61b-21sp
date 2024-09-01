@@ -10,24 +10,17 @@ import static gitlet.Utils.*;
 public class CommitPointer implements Serializable {
 
     private File commit;
-    private File masterOrHead;
+    private File pointerName;
     /**
      *
-     * @param file head or master
+     * @param file master or branch
      * @param commit
      */
      CommitPointer(File file, Commit commit) {
-         masterOrHead = file;
-         MovePointer(commit);
+         pointerName = file;
+         this.commit = join(COMMIT_DIR, sha1(commit));
+         writeObject(file, this);
      }
-
-    /**
-     * update the CommitPointer pointer when commit check ...etc
-     */
-    public void MovePointer(Commit commit) {
-        this.commit = join(COMMIT_DIR, sha1(commit));
-        savePointer();
-    }
 
     public File currPoint() {
         return commit;
@@ -37,19 +30,17 @@ public class CommitPointer implements Serializable {
         return readObject(HEAD, CommitPointer.class);
     }
 
-    public static CommitPointer readMaster() {
-        return readObject(MARSTER, CommitPointer.class);
-    }
-
-    public void savePointer() {
-        writeObject(masterOrHead, this);
+    public static CommitPointer readBranch(File pointerName) {
+        return readObject(pointerName, CommitPointer.class);
     }
 
     public static void saveHead(Commit commit) {
-        readHead().MovePointer(commit);
+        writeObject(HEAD, new CommitPointer(HEAD, commit));
     }
 
-    public static void saveMaster(Commit commit) {
-        readMaster().MovePointer(commit);
+    public static void saveBranch(File pointerName, Commit commit) {
+        writeObject(pointerName ,new CommitPointer(pointerName, commit));
+        saveHead(commit);
     }
+
 }

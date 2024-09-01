@@ -4,17 +4,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import static gitlet.Commit.currCommit;
-import static gitlet.Repository.STAGE_DIR;
-import static gitlet.Repository.STATUS;
+import static gitlet.CommitPointer.readBranch;
+import static gitlet.CommitPointer.saveBranch;
+import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
 public class Status implements Serializable {
-    public ArrayList<File> Branches;
+    private ArrayList<File> Branches;
     private ArrayList<File> staging;
     private ArrayList<File> removal;
+    private File branch;
 
     public Status() {
         try {
@@ -25,6 +28,8 @@ public class Status implements Serializable {
         staging = new ArrayList<>();
         removal = new ArrayList<>();
         Branches = new ArrayList<>();
+        Branches.add(MARSTER);
+        branch = MARSTER;
         saveStatus();
     }
 
@@ -33,8 +38,8 @@ public class Status implements Serializable {
         String hashContents = sha1(contents);
         File newVersion = join(STAGE_DIR, filename.getPath());
         HashMap<File, Myfile> files = currCommit().files();
-        if (files.containsKey(filename) && files.get(filename).latestVersion().getName().equals(hashContents)) {
-            remove(filename);
+        if (files.containsKey(filename) && files.get(filename).Version().getName().equals(hashContents)) {
+            removal.remove(filename);
             saveStatus();
         } else {
             try {
@@ -43,7 +48,9 @@ public class Status implements Serializable {
                 throw new RuntimeException(e);
             }
             writeContents(newVersion, contents);
-            staging.add(filename);
+            if (!staging.contains(filename)) {
+                staging.add(filename);
+            }
             saveStatus();
         }
     }
@@ -55,7 +62,9 @@ public class Status implements Serializable {
             restrictedDelete(join(STAGE_DIR, filename.getPath()));
             saveStatus();
         } else if (currCommit().files().containsKey(filename)) {
-            removal.add(filename);
+            if (!removal.contains(filename)) {
+                removal.add(filename);
+            }
             restrictedDelete(filename);
             saveStatus();
         } else {
@@ -65,9 +74,11 @@ public class Status implements Serializable {
 
     public void clear() {
         for (String remove: plainFilenamesIn(STAGE_DIR)) {
-            restrictedDelete(remove);
+            join(STAGE_DIR, remove).delete();
         }
-        new Status().saveStatus();
+        staging = new ArrayList<>();
+        removal = new ArrayList<>();
+        saveStatus();
     }
 
     public void saveStatus() {
@@ -85,4 +96,95 @@ public class Status implements Serializable {
     public ArrayList<File> staging() {
         return staging;
     }
+
+    public ArrayList<File> getBranches() {
+        return Branches;
+    }
+
+    public File getBranch() {
+        return branch;
+    }
+
+    public void createBranch(String branchname) {
+        File branchName = join(GITLET_DIR, branchname);
+        if (Branches.contains(branchName)) {
+            throw new GitletException("A branch with that name already exists.");
+        }
+        try {
+            branchName.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        saveBranch(branchName, currCommit());
+        branch = branchName;
+        Branches.add(branch);
+        saveStatus();
+    }
+
+    public void removeBranch(String branchname) {
+        File branchName = join(GITLET_DIR, branchname);
+        if (!branchName.exists()) {
+            throw new GitletException("A branch with that name does not exist.");
+        } else if (branchName.equals(branch)) {
+            throw new GitletException("Cannot remove the current branch.");
+        }
+        branchName.delete();
+        Branches.remove(branchName);
+        saveStatus();
+    }
+
+    public void checkout(File commitName) {
+        if (!untrackedFile().isEmpty()) {
+            throw new GitletException("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
+        Commit commit = readObject(join(COMMIT_DIR, commitName.getName()), Commit.class);
+        for (String all: plainFilenamesIn(CWD)) {
+            new File(all).delete();
+        }
+        for (File file: commit.files().keySet()) {
+            File fileBlob = commit.files().get(file).Version();
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            writeContents(file, readContents(fileBlob));
+        }
+        if (!commit.getBranch().equals(branch)) {
+            clear();
+            branch = commit.getBranch();
+        }
+        saveStatus();
+    }
+
+    public void switchBranch(File branchName) {
+        if (branchName.equals(branch)) {
+            throw new GitletException("No need to checkout the current branch.");
+        } else if (!Branches.contains(branchName)) {
+            throw new GitletException("No such branch exists.");
+        }
+        checkout(readBranch(branchName).currPoint());
+        writeObject(HEAD, readBranch(branchName));
+
+    }
+
+    public void sort() {
+        Branches.sort(new CompareFile());
+        staging.sort(new CompareFile());
+        removal.sort(new CompareFile());
+    }
+
+    private static class CompareFile implements Comparator<File> {
+        @Override
+        public int compare(File o1, File o2) {
+            if (o1.getName().compareTo(o2.getName()) < 0) {
+                return -1;
+            } else if (o1.getName().compareTo(o2.getName()) > 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
 }
