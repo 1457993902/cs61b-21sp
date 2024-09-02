@@ -112,7 +112,10 @@ public class Commit implements Serializable {
     }
 
     public File getParent(int index) {
-        if (parent.isEmpty() || index > parent.size() - 1) {
+        if (parent.isEmpty()) {
+            return null;
+        }
+        if (index > parent.size() - 1) {
             return getParent(index - 1);
         }
         return parent.get(index);
