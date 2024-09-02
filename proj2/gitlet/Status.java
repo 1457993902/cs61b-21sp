@@ -143,8 +143,20 @@ public class Status implements Serializable {
 
     public void checkout(File commitName) {
         if (!untrackedFile().isEmpty()) {
-            System.out.println("There is an untracked file in the way; delete it," +
-                    " or add and commit it first.");
+            System.out.println("There is an untracked file in the way; delete it,"
+                    + " or add and commit it first.");
+            System.exit(0);
+        }
+        Boolean find = true;
+        for (String file: plainFilenamesIn(COMMIT_DIR)) {
+            if (file.equals(commitName.getName()) || file.contains(commitName.getName())) {
+                commitName = join(COMMIT_DIR, file);
+                find = true;
+                break;
+            }
+        }
+        if (!find) {
+            System.out.println("No commit with that id exists.");
             System.exit(0);
         }
         Commit commit = readObject(join(COMMIT_DIR, commitName.getName()), Commit.class);
@@ -164,6 +176,7 @@ public class Status implements Serializable {
             clear();
             branch = commit.getBranch();
         }
+        clear();
         saveStatus();
     }
 

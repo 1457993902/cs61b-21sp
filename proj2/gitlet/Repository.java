@@ -17,7 +17,6 @@ import static gitlet.Utils.*;
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -38,8 +37,8 @@ public class Repository {
 
     public static void init() {
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already" +
-                    " exists in the current directory.");
+            System.out.println("A Gitlet version-control system already"
+                    + " exists in the current directory.");
             System.exit(0);
         }
         GITLET_DIR.mkdir();
@@ -93,8 +92,8 @@ public class Repository {
             commit = readObject(commitName, Commit.class);
             System.out.println("===\ncommit " + commitName.getName());
             if (commit.parents().size() > 1) {
-                System.out.println("Merge: " + commit.getParent(0).getName().substring(0,7)
-                        + " " + commit.getParent(1).getName().substring(0,7));
+                System.out.println("Merge: " + commit.getParent(0).getName().substring(0, 7)
+                        + " " + commit.getParent(1).getName().substring(0, 7));
             }
             System.out.println("Date: " + commit.getTime());
             System.out.println(commit.getMessage());
@@ -177,7 +176,7 @@ public class Repository {
                 }
                 if (!status.removal().contains(fileName)
                         && !plainFilenamesIn(CWD).contains(filename)) {
-                    files.add(fileName);//TODO (delete)
+                    files.add(fileName);
                 }
             }
             if (status.staging().contains(fileName)) {
@@ -185,7 +184,7 @@ public class Repository {
                     files.add(fileName);
                 }
                 if (!plainFilenamesIn(CWD).contains(filename)) {
-                    files.add(fileName);//TODO (delete)
+                    files.add(fileName);
                 }
             }
             return files;
@@ -266,7 +265,9 @@ public class Repository {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
+        Commit commit = readObject(join(COMMIT_DIR, commitname), Commit.class);
         status.checkout(commitName);
+        saveBranch(commit.getBranch(), commit);
     }
 
     public static Commit getSpilt(File otherBranch, File branch, Status status) {
@@ -365,7 +366,7 @@ public class Repository {
                                     + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>\n";
                             writeContents(join(CWD, file.getName()), contents);
                             status.stage(file);
-                        } else {
+                        } else if (!otherFile.containsKey(file)) {
                             conflict = true;
                             String contents = "<<<<<<< HEAD\n";
                             contents = contents + readContentsAsString(thisVersion) + "=======\n" + ">>>>>>>\n";

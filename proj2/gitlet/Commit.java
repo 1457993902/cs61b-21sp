@@ -54,7 +54,7 @@ public class Commit implements Serializable {
         update(status, "Merged " + otherBranch.getName() + " into " + thisBranch.getName() + ".");
     }
 
-    public void update(Status status, String message) {
+    public void update(Status status, String mes) {
         if (parent.size() < 2) {
             parent = new ArrayList<>();
             parent.add(readHead().currPoint());
@@ -82,7 +82,7 @@ public class Commit implements Serializable {
         }
         branch = status.getBranch();
         timestamp = new Date();
-        this.message = message;
+        this.message = mes;
         saveCommit();
         saveBranch(branch, this);
     }
@@ -132,5 +132,4 @@ public class Commit implements Serializable {
     public File getBranch() {
         return branch;
     }
-    /* TODO: fill in the rest of this class. */
 }
