@@ -269,12 +269,14 @@ public class Repository {
         status.checkout(commitName);
     }
 
-    public static Commit getSpilt(Commit otherCommit, Commit commit) {
+    public static Commit getSpilt(File otherBranch, File branch, Status status) {
+        Commit otherCommit = readObject(readObject(otherBranch, CommitPointer.class).currPoint(), Commit.class);
+        Commit commit = readObject(readObject(branch, CommitPointer.class).currPoint(), Commit.class);
         Commit spilt1 = otherCommit, spilt2 = commit;
         for (int i = 0; i < otherCommit.parents().size(); i++) {
             spilt1 = otherCommit;
             while (!spilt1.getMessage().equals("initial commit")) {
-                if (!spilt1.getBranch().equals(otherCommit.getBranch())) {
+                if (!spilt1.getBranch().equals(otherBranch)) {
                     break;
                 }
                 spilt1 = readObject(spilt1.getParent(i), Commit.class);
@@ -286,7 +288,7 @@ public class Repository {
         for (int i = 0; i < commit.parents().size(); i++) {
             spilt2 = commit;
             while (!spilt2.getMessage().equals("initial commit")) {
-                if (!spilt2.getBranch().equals(commit.getBranch())) {
+                if (!spilt2.getBranch().equals(branch)) {
                     break;
                 }
                 spilt2 = readObject(spilt2.getParent(i), Commit.class);
@@ -298,6 +300,11 @@ public class Repository {
         Commit spilt = spilt1.getMessage().equals("initial commit") ? spilt2 : spilt1;
         if (spilt.equals(otherCommit)) {
             System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        if (spilt.equals(commit)) {
+            status.switchBranch(otherBranch);
+            System.out.println("Current branch fast-forwarded.");
             System.exit(0);
         }
         return spilt;
@@ -329,12 +336,7 @@ public class Repository {
         Commit commit = currCommit();
         checkMerge(status, branchName, commit);
         Commit otherCommit = readObject(readBranch(branchName).currPoint(), Commit.class);
-        Commit spilt = getSpilt(otherCommit, commit);
-        if (spilt.equals(commit)) {
-            status.switchBranch(branchName);
-            System.out.println("Current branch fast-forwarded.");
-            return;
-        }
+        Commit spilt = getSpilt(branchName, status.getBranch(), status);
         HashMap<File, Myfile> thisFile = commit.files(), otherFile = otherCommit.files(), spiltFile = spilt.files();
         HashSet<File> allFile = new HashSet<>();
         allFile.addAll(thisFile.keySet());
