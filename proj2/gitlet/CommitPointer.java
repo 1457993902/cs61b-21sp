@@ -10,10 +10,8 @@ import static gitlet.Utils.*;
 public class CommitPointer implements Serializable {
 
     private File commit;
-    private File pointerName;
 
     CommitPointer(File file, Commit commit) {
-        pointerName = file;
         this.commit = join(COMMIT_DIR, sha1(commit));
         writeObject(file, this);
     }

@@ -276,7 +276,7 @@ public class Repository {
         for (int i = 0; i < otherCommit.parents().size(); i++) {
             spilt1 = otherCommit;
             while (!spilt1.getMessage().equals("initial commit")) {
-                if (!spilt1.getBranch().equals(otherBranch)) {
+                if (spilt1.getBranch().equals(branch)) {
                     break;
                 }
                 spilt1 = readObject(spilt1.getParent(i), Commit.class);
@@ -288,7 +288,7 @@ public class Repository {
         for (int i = 0; i < commit.parents().size(); i++) {
             spilt2 = commit;
             while (!spilt2.getMessage().equals("initial commit")) {
-                if (!spilt2.getBranch().equals(branch)) {
+                if (spilt2.getBranch().equals(otherBranch)) {
                     break;
                 }
                 spilt2 = readObject(spilt2.getParent(i), Commit.class);
