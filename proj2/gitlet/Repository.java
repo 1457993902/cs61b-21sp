@@ -9,13 +9,11 @@ import static gitlet.CommitPointer.*;
 import static gitlet.Status.readStatus;
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author mu9
  */
 public class Repository {
     /**
@@ -39,8 +37,9 @@ public class Repository {
     public static final File STATUS = join(GITLET_DIR, "status");
 
     public static void init() {
-        if(GITLET_DIR.exists()){
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+        if (GITLET_DIR.exists()) {
+            System.out.println("A Gitlet version-control system already" +
+                    " exists in the current directory.");
             System.exit(0);
         }
         GITLET_DIR.mkdir();
@@ -67,14 +66,17 @@ public class Repository {
      * @param message
      */
     public static void commit(String message) {
-        Commit newcommit =currCommit();
+        Commit newcommit = currCommit();
         Status status = readStatus();
-        if (status.removal() == null && status.staging() == null) {
+        if (message.equals("")) {
+            System.out.println("Please enter a commit message.");
+            System.exit(0);
+        }
+        if (status.removal().isEmpty() && status.staging().isEmpty()) {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
         newcommit.update(status, message);
-        saveBranch(status.getBranch(), newcommit);
         status.clear();
     }
 
@@ -90,18 +92,22 @@ public class Repository {
         do {
             commit = readObject(commitName, Commit.class);
             System.out.println("===\ncommit " + commitName.getName());
-            System.out.println("Date: " + commit.getTime());//TODO parents are 2 merge
+            if (commit.parents().size() > 1) {
+                System.out.println("Merge: " + commit.getParent(0).getName().substring(0,7)
+                        + " " + commit.getParent(1).getName().substring(0,7));
+            }
+            System.out.println("Date: " + commit.getTime());
             System.out.println(commit.getMessage());
             System.out.println();
             commitName = commit.getParent(0);
         } while (commitName != null);
     }
     
-    public static void global_log() {
+    public static void globaLlog() {
         for (String commitName: plainFilenamesIn(COMMIT_DIR)) {
             Commit commit = readObject(join(COMMIT_DIR, commitName), Commit.class);
             System.out.println("===\ncommit " + commitName);
-            System.out.println("Date:" + commit.getTime());
+            System.out.println("Date: " + commit.getTime());
             System.out.println(commit.getMessage());
             System.out.println();
         }
@@ -127,7 +133,7 @@ public class Repository {
         status.sort();
         System.out.println("=== Branches ===");
         for (File branch: status.getBranches()) {
-            if (branch.equals(status.getBranch())){
+            if (branch.equals(status.getBranch())) {
                 System.out.print("*");
             }
             System.out.println(branch.getName());
@@ -144,16 +150,16 @@ public class Repository {
         }
         System.out.println();
         System.out.println("=== Modifications Not Staged For Commit ===");
-        TreeSet<File> modified = modifiedFile();
-        for (File file: modified) {
-            System.out.println(file.getName());
-        }
+        //TreeSet<File> modified = modifiedFile();
+        //for (File file: modified) {
+        //    System.out.println(file.getName());
+        //}
         System.out.println();
         System.out.println("=== Untracked Files ===");
-        TreeSet<File> untrack = untrackedFile();
-        for (File file: untrack) {
-            System.out.println(file.getName());
-        }
+        //TreeSet<File> untrack = untrackedFile();
+        //for (File file: untrack) {
+        //    System.out.println(file.getName());
+        //}
         System.out.println();
     }
 
@@ -165,10 +171,12 @@ public class Repository {
             File fileName = new File(filename);
             String contentSHA = sha1(readContents(fileName));
             if (commit.files().containsKey(fileName)) {
-                if (commit.files().get(fileName).Version().getName() != contentSHA && !status.staging().contains(fileName)) {
+                if (commit.files().get(fileName).Version().getName() != contentSHA
+                        && !status.staging().contains(fileName)) {
                     files.add(fileName);
                 }
-                if (!status.removal().contains(fileName) && !plainFilenamesIn(CWD).contains(filename)) {
+                if (!status.removal().contains(fileName)
+                        && !plainFilenamesIn(CWD).contains(filename)) {
                     files.add(fileName);//TODO (delete)
                 }
             }
@@ -191,7 +199,8 @@ public class Repository {
         Commit commit = currCommit();
         for (String filename: plainFilenamesIn(CWD)) {
             File fileName = new File(filename);
-            if (status.removal().contains(fileName) || !status.staging().contains(fileName) && !commit.files().containsKey(fileName)) {
+            if (status.removal().contains(fileName)
+                    || !status.staging().contains(fileName) && !commit.files().containsKey(fileName)) {
                 files.add(fileName);
             }
         }
@@ -199,7 +208,15 @@ public class Repository {
     }
 
     private static void checkout(File commitName, File fileName) {
-        if (!plainFilenamesIn(COMMIT_DIR).contains(commitName.getName())) {
+        Boolean find = false;
+        for (String file: plainFilenamesIn(COMMIT_DIR)) {
+            if (file.equals(commitName.getName()) || file.contains(commitName.getName())) {
+                commitName = join(COMMIT_DIR, file);
+                find = true;
+                break;
+            }
+        }
+        if (!find) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
@@ -252,53 +269,73 @@ public class Repository {
         status.checkout(commitName);
     }
 
-    public static void merge(String branchname) {
-        Status status = readStatus();
+    public static Commit getSpilt(Commit otherCommit, Commit commit) {
+        Commit spilt1 = otherCommit, spilt2 = commit;
+        for (int i = 0; i < otherCommit.parents().size(); i++) {
+            spilt1 = otherCommit;
+            while (!spilt1.getMessage().equals("initial commit")) {
+                if (!spilt1.getBranch().equals(otherCommit.getBranch())) {
+                    break;
+                }
+                spilt1 = readObject(spilt1.getParent(i), Commit.class);
+            }
+            if (!spilt1.getMessage().equals("initial commit")) {
+                break;
+            }
+        }
+        for (int i = 0; i < commit.parents().size(); i++) {
+            spilt2 = commit;
+            while (!spilt2.getMessage().equals("initial commit")) {
+                if (!spilt2.getBranch().equals(commit.getBranch())) {
+                    break;
+                }
+                spilt2 = readObject(spilt2.getParent(i), Commit.class);
+            }
+            if (!spilt2.getMessage().equals("initial commit")) {
+                break;
+            }
+        }
+        Commit spilt = spilt1.getMessage().equals("initial commit") ? spilt2 : spilt1;
+        if (spilt.equals(otherCommit)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            System.exit(0);
+        }
+        return spilt;
+    }
+
+    public static void checkMerge(Status status, File branchName, Commit commit) {
         if (!status.removal().isEmpty() || !status.staging().isEmpty()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
         }
-        File branchName = join(GITLET_DIR, branchname);
         if (!status.getBranches().contains(branchName)) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
-        Commit commit = currCommit();
-        if(commit.getBranch().equals(branchName)) {
+        if (status.getBranch().equals(branchName)) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
         if (!untrackedFile().isEmpty()) {
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; delete it,"
+                    + " or add and commit it first.");
             System.exit(0);
         }
+    }
+
+    public static void merge(String branchname) {
+        Status status = readStatus();
+        File branchName = join(GITLET_DIR, branchname);
+        Commit commit = currCommit();
+        checkMerge(status, branchName, commit);
         Commit otherCommit = readObject(readBranch(branchName).currPoint(), Commit.class);
-        Commit spilt1 = otherCommit, spilt2 = commit;
-        while (!spilt1.getMessage().equals("initial commit")) {
-            if (!spilt1.getBranch().equals(commit.getBranch())) {
-                break;
-            }
-            spilt1 = readObject(spilt1.getParent(0), Commit.class);
-        }
-        while (!spilt2.getMessage().equals("initial commit")) {
-            if (!spilt2.getBranch().equals(commit.getBranch())) {
-                break;
-            }
-            spilt2 = readObject(spilt2.getParent(0), Commit.class);
-        }
-        Commit spilt = spilt1.getMessage().equals("initial commit")? spilt2: spilt1;
-        if (spilt.equals(otherCommit)) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            return;
-        } else if (spilt.equals(commit)) {
+        Commit spilt = getSpilt(otherCommit, commit);
+        if (spilt.equals(commit)) {
             status.switchBranch(branchName);
             System.out.println("Current branch fast-forwarded.");
+            return;
         }
-        Commit newCommit = new Commit(commit.getBranch(), otherCommit.getBranch());
-        HashMap<File, Myfile> thisFile = commit.files();
-        HashMap<File, Myfile> otherFile = otherCommit.files();
-        HashMap<File, Myfile> spiltFile = spilt.files();
-        HashMap<File, Myfile> newFile = new HashMap<>();
+        HashMap<File, Myfile> thisFile = commit.files(), otherFile = otherCommit.files(), spiltFile = spilt.files();
         HashSet<File> allFile = new HashSet<>();
         allFile.addAll(thisFile.keySet());
         allFile.addAll(otherFile.keySet());
@@ -311,24 +348,25 @@ public class Repository {
                     File spiltVersion = spiltFile.get(file).Version();
                     if (thisVersion.equals(spiltVersion)) {
                         if (otherFile.containsKey(file)) {
-                            writeContents(join(CWD, file.getName()), readContentsAsString(otherFile.get(file).Version()));
-                            newFile.put(file, new Myfile(file, otherFile.get(file).Version()));
+                            if (!otherFile.get(file).Version().equals(spiltVersion)) {
+                                writeContents(join(CWD, file.getName()), readContentsAsString(otherFile.get(file).Version()));
+                                status.stage(file);
+                            }
                         } else {
                             join(CWD, file.getName()).delete();
                         }
                     } else {
-                        if (otherFile.containsKey(file) && otherFile.get(file).Version().equals(spiltVersion)) {
-                            newFile.put(file, thisFile.get(file));
-                        } else if (!otherFile.get(file).Version().equals(spiltVersion)) {
+                        if (otherFile.containsKey(file) && !otherFile.get(file).Version().equals(spiltVersion)) {
                             conflict = true;
                             String contents = "<<<<<<< HEAD\n";
-                            contents = contents + readContentsAsString(thisVersion) + "=======\n" + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>";
+                            contents = contents + readContentsAsString(thisVersion) + "=======\n"
+                                    + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>\n";
                             writeContents(join(CWD, file.getName()), contents);
                             status.stage(file);
                         } else {
                             conflict = true;
                             String contents = "<<<<<<< HEAD\n";
-                            contents = contents + readContentsAsString(thisVersion) + "=======\n" + ">>>>>>>";
+                            contents = contents + readContentsAsString(thisVersion) + "=======\n" + ">>>>>>>\n";
                             writeContents(join(CWD, file.getName()), contents);
                             status.stage(file);
                         }
@@ -337,11 +375,10 @@ public class Repository {
                     if (otherFile.containsKey(file)) {
                         conflict = true;
                         String contents = "<<<<<<< HEAD\n";
-                        contents = contents + readContentsAsString(thisVersion) + "=======\n" + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>";
+                        contents = contents + readContentsAsString(thisVersion) + "=======\n"
+                                + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>\n";
                         writeContents(join(CWD, file.getName()), contents);
                         status.stage(file);
-                    } else {
-                        newFile.put(file, thisFile.get(file));
                     }
                 }
             } else {
@@ -350,14 +387,20 @@ public class Repository {
                         if (!otherFile.get(file).Version().equals(spiltFile.get(file).Version())) {
                             conflict = true;
                             String contents = "<<<<<<< HEAD\n";
-                            contents = contents + "=======\n" + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>";
+                            contents = contents + "=======\n" + readContentsAsString(otherFile.get(file).Version()) + ">>>>>>>\n";
                             writeContents(join(CWD, file.getName()), contents);
                             status.stage(file);
                         }
                     }
                 } else {
                     if (otherFile.containsKey(file)) {
-                        newFile.put(file, otherFile.get(file));
+                        try {
+                            file.createNewFile();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        writeContents(file, readContentsAsString(otherFile.get(file).Version()));
+                        status.stage(file);
                     }
                 }
             }
@@ -365,6 +408,7 @@ public class Repository {
         if (conflict) {
             System.out.println("Encountered a merge conflict.");
         }
-        newCommit.update(newFile, readBranch(branchName).currPoint(), readHead().currPoint());
+        commit.update(commit.getBranch(), branchName, status);
+        status.clear();
     }
 }

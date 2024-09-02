@@ -14,7 +14,7 @@ import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
 public class Status implements Serializable {
-    private ArrayList<File> Branches;
+    private ArrayList<File> branches;
     private ArrayList<File> staging;
     private ArrayList<File> removal;
     private File branch;
@@ -27,18 +27,23 @@ public class Status implements Serializable {
         }
         staging = new ArrayList<>();
         removal = new ArrayList<>();
-        Branches = new ArrayList<>();
-        Branches.add(MARSTER);
+        branches = new ArrayList<>();
+        branches.add(MARSTER);
         branch = MARSTER;
         saveStatus();
     }
 
     public void stage(File filename) {
+        if (!filename.exists()) {
+            System.out.println("File does not exist.");
+            System.exit(0);
+        }
         String contents = readContentsAsString(filename);
         String hashContents = sha1(contents);
         File newVersion = join(STAGE_DIR, filename.getPath());
         HashMap<File, Myfile> files = currCommit().files();
-        if (files.containsKey(filename) && files.get(filename).Version().getName().equals(hashContents)) {
+        if (files.containsKey(filename)
+                && files.get(filename).Version().getName().equals(hashContents)) {
             removal.remove(filename);
             saveStatus();
         } else {
@@ -59,13 +64,13 @@ public class Status implements Serializable {
     public void remove(File filename) {
         if (staging.contains(filename)) {
             staging.remove(filename);
-            restrictedDelete(join(STAGE_DIR, filename.getPath()));
+            join(STAGE_DIR, filename.getPath()).delete();
             saveStatus();
         } else if (currCommit().files().containsKey(filename)) {
             if (!removal.contains(filename)) {
                 removal.add(filename);
             }
-            restrictedDelete(filename);
+            join(CWD, filename.getPath()).delete();
             saveStatus();
         } else {
             System.out.println("No reason to remove the file");
@@ -99,7 +104,7 @@ public class Status implements Serializable {
     }
 
     public ArrayList<File> getBranches() {
-        return Branches;
+        return branches;
     }
 
     public File getBranch() {
@@ -108,7 +113,7 @@ public class Status implements Serializable {
 
     public void createBranch(String branchname) {
         File branchName = join(GITLET_DIR, branchname);
-        if (Branches.contains(branchName)) {
+        if (branches.contains(branchName)) {
             System.out.println("A branch with that name already exists.");
             System.exit(0);
         }
@@ -118,8 +123,7 @@ public class Status implements Serializable {
             throw new RuntimeException(e);
         }
         saveBranch(branchName, currCommit());
-        branch = branchName;
-        Branches.add(branch);
+        branches.add(branchName);
         saveStatus();
     }
 
@@ -133,13 +137,14 @@ public class Status implements Serializable {
             System.exit(0);
         }
         branchName.delete();
-        Branches.remove(branchName);
+        branches.remove(branchName);
         saveStatus();
     }
 
     public void checkout(File commitName) {
         if (!untrackedFile().isEmpty()) {
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; delete it," +
+                    " or add and commit it first.");
             System.exit(0);
         }
         Commit commit = readObject(join(COMMIT_DIR, commitName.getName()), Commit.class);
@@ -166,17 +171,18 @@ public class Status implements Serializable {
         if (branchName.equals(branch)) {
             System.out.println("No need to checkout the current branch.");
             System.exit(0);
-        } else if (!Branches.contains(branchName)) {
+        } else if (!branches.contains(branchName)) {
             System.out.println("No such branch exists.");
             System.exit(0);
         }
         checkout(readBranch(branchName).currPoint());
         writeObject(HEAD, readBranch(branchName));
-
+        branch = branchName;
+        saveStatus();
     }
 
     public void sort() {
-        Branches.sort(new CompareFile());
+        branches.sort(new CompareFile());
         staging.sort(new CompareFile());
         removal.sort(new CompareFile());
     }

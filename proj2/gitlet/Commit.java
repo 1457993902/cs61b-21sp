@@ -1,11 +1,9 @@
 package gitlet;
 
-// TODO: any imports you need here
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static gitlet.CommitPointer.*;
@@ -13,14 +11,12 @@ import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author mu9
  */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
@@ -50,23 +46,19 @@ public class Commit implements Serializable {
         saveCommit();
     }
 
-    Commit(File thisBranch, File otherBranch) {
-        this.message = "Merged " + otherBranch.getName() + " into " + thisBranch.getName() +".";
+    public void update(File thisBranch, File otherBranch, Status status) {
+        parent = new ArrayList<>();
+        parent.add(readObject(thisBranch, CommitPointer.class).currPoint());
+        parent.add(readObject(otherBranch, CommitPointer.class).currPoint());
         timestamp = new Date(0);
-        files = new HashMap<>();
-    }
-
-    public void update(HashMap<File, Myfile> newfiles, File... parents) {
-        files = newfiles;
-        for (File p: parents) {
-            this.parent.add(p);
-        }
-        saveCommit();
+        update(status, "Merged " + otherBranch.getName() + " into " + thisBranch.getName() + ".");
     }
 
     public void update(Status status, String message) {
-        parent = new ArrayList<>();
-        parent.add(readHead().currPoint());
+        if (parent.size() < 2) {
+            parent = new ArrayList<>();
+            parent.add(readHead().currPoint());
+        }
         for (File add: status.staging()) {
             String newcontents = readContentsAsString(join(STAGE_DIR, add.getPath()));
             File newversion = join(BLOBS_DIR, sha1(newcontents));
@@ -92,6 +84,7 @@ public class Commit implements Serializable {
         timestamp = new Date();
         this.message = message;
         saveCommit();
+        saveBranch(branch, this);
     }
 
     public static Commit currCommit() {
@@ -119,10 +112,14 @@ public class Commit implements Serializable {
     }
 
     public File getParent(int index) {
-        if (parent.isEmpty()) {
-            return null;
+        if (parent.isEmpty() || index > parent.size() - 1) {
+            return getParent(index - 1);
         }
         return parent.get(index);
+    }
+
+    public List<File> parents() {
+        return parent;
     }
 
     public String getMessage() {

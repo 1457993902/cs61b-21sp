@@ -7,17 +7,17 @@ import java.io.Serializable;
 public class Myfile implements Serializable {
 
     private File filename;
-    private File Version;
+    private File version;
 
 
     Myfile(File filename, File version) {
         this.filename = filename;
-        Version = null;
+        this.version = null;
         update(version);
     }
 
     public void update(File newversion) {
-        Version = newversion;
+        version = newversion;
     }
 
     public File getname() {
@@ -26,6 +26,6 @@ public class Myfile implements Serializable {
 
 
     public File Version() {
-        return Version;
+        return version;
     }
 }

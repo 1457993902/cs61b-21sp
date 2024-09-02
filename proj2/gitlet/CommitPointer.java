@@ -11,16 +11,12 @@ public class CommitPointer implements Serializable {
 
     private File commit;
     private File pointerName;
-    /**
-     *
-     * @param file master or branch
-     * @param commit
-     */
-     CommitPointer(File file, Commit commit) {
-         pointerName = file;
-         this.commit = join(COMMIT_DIR, sha1(commit));
-         writeObject(file, this);
-     }
+
+    CommitPointer(File file, Commit commit) {
+        pointerName = file;
+        this.commit = join(COMMIT_DIR, sha1(commit));
+        writeObject(file, this);
+    }
 
     public File currPoint() {
         return commit;
@@ -39,7 +35,7 @@ public class CommitPointer implements Serializable {
     }
 
     public static void saveBranch(File pointerName, Commit commit) {
-        writeObject(pointerName ,new CommitPointer(pointerName, commit));
+        writeObject(pointerName, new CommitPointer(pointerName, commit));
         saveHead(commit);
     }
 
